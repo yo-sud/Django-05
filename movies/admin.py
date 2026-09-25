@@ -1,12 +1,34 @@
 from django.contrib import admin
+from django.utils.html import format_html
+from django.urls import reverse
 from .models import Genre, Person, Movie, Rating
+
+
+class RatingInline(admin.TabularInline):
+    model = Rating
+    extra = 1
+    readonly_fields = ['created_at', 'updated_at']
+    fields = ['user', 'score', 'comment', 'created_at', 'updated_at']
+    autocomplete_fields = ['user']
+    verbose_name = 'Valoración'
+    verbose_name_plural = 'Valoraciones'
 
 
 @admin.register(Genre)
 class GenreAdmin(admin.ModelAdmin):
-    list_display = ['name', 'created_at', 'updated_at']
+    list_display = ['name', 'movies_count', 'created_at', 'updated_at']
+    list_filter = ['created_at']
     search_fields = ['name']
     readonly_fields = ['created_at', 'updated_at']
+    date_hierarchy = 'created_at'
+    ordering = ['name']
+    actions = ['delete_selected']
+
+    def movies_count(self, obj):
+        count = obj.movies.count()
+        url = reverse('admin:movies_movie_changelist') + f'?genres__id__exact={obj.id}'
+        return format_html('<a href="{}">{} películas</a>', url, count)
+    movies_count.short_description = 'Películas'
 
 
 @admin.register(Person)
