@@ -11,6 +11,9 @@ class Genre(models.Model):
         ordering = ['name']
         verbose_name = 'Género'
         verbose_name_plural = 'Géneros'
+        permissions = [
+            ('manage_genres', 'Gestionar géneros (CRUD completo)'),
+        ]
 
     def __str__(self):
         return self.name
@@ -28,6 +31,9 @@ class Person(models.Model):
         ordering = ['last_name', 'first_name']
         verbose_name = 'Persona'
         verbose_name_plural = 'Personas'
+        permissions = [
+            ('view_person_filmography', 'Ver filmografía de persona'),
+        ]
 
     def __str__(self):
         return f'{self.first_name} {self.last_name}'
@@ -56,6 +62,11 @@ class Movie(models.Model):
         ordering = ['-release_year', 'title']
         verbose_name = 'Película'
         verbose_name_plural = 'Películas'
+        permissions = [
+            ('view_movie_stats', 'Ver estadísticas de películas'),
+            ('export_movie_data', 'Exportar datos de películas'),
+            ('publish_movie', 'Publicar película'),
+        ]
 
     def __str__(self):
         return f'{self.title} ({self.release_year})'
@@ -74,6 +85,9 @@ class Rating(models.Model):
         verbose_name = 'Valoración'
         verbose_name_plural = 'Valoraciones'
         unique_together = ['movie', 'user']
+        permissions = [
+            ('moderate_rating', 'Moderar valoraciones (editar/borrar cualquier)'),
+        ]
 
     def __str__(self):
         return f'{self.movie.title} - {self.score}/10 por {self.user.username}'
