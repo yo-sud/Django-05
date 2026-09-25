@@ -182,7 +182,38 @@ class MovieAdmin(admin.ModelAdmin):
 
 @admin.register(Rating)
 class RatingAdmin(admin.ModelAdmin):
-    list_display = ['movie', 'user', 'score', 'created_at']
-    list_filter = ['score', 'created_at']
+    list_display = ['movie_link', 'user_link', 'score', 'score_badge', 'short_comment', 'created_at']
+    list_filter = ['score', 'created_at', 'movie__genres']
     search_fields = ['movie__title', 'user__username', 'comment']
     readonly_fields = ['created_at', 'updated_at']
+    date_hierarchy = 'created_at'
+    ordering = ['-created_at']
+    list_per_page = 25
+    autocomplete_fields = ['movie', 'user']
+    list_select_related = ['movie', 'user']
+
+    def movie_link(self, obj):
+        url = reverse('admin:movies_movie_change', args=[obj.movie.id])
+        return format_html('<a href="{}">{}</a>', url, obj.movie)
+    movie_link.short_description = 'Película'
+    movie_link.admin_order_field = 'movie__title'
+
+    def user_link(self, obj):
+        url = reverse('admin:auth_user_change', args=[obj.user.id])
+        return format_html('<a href="{}">{}</a>', url, obj.user.username)
+    user_link.short_description = 'Usuario'
+    user_link.admin_order_field = 'user__username'
+
+    def score_badge(self, obj):
+        color = 'green' if obj.score >= 7 else 'orange' if obj.score >= 5 else 'red'
+        return format_html(
+            '<span style="background: {}; color: white; padding: 2px 8px; border-radius: 3px;">{}/10</span>',
+            color, obj.score
+        )
+    score_badge.short_description = 'Puntuación'
+
+    def short_comment(self, obj):
+        if obj.comment:
+            return obj.comment[:50] + ('...' if len(obj.comment) > 50 else '')
+        return '-'
+    short_comment.short_description = 'Comentario'
