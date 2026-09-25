@@ -33,17 +33,43 @@ class GenreAdmin(admin.ModelAdmin):
 
 @admin.register(Person)
 class PersonAdmin(admin.ModelAdmin):
-    list_display = ['first_name', 'last_name', 'birth_date', 'created_at', 'updated_at']
-    list_filter = ['birth_date']
-    search_fields = ['first_name', 'last_name']
+    list_display = ['full_name', 'birth_date', 'age', 'directed_count', 'acted_count', 'created_at']
+    list_filter = ['birth_date', 'created_at']
+    search_fields = ['first_name', 'last_name', 'bio']
     readonly_fields = ['created_at', 'updated_at']
+    date_hierarchy = 'created_at'
+    ordering = ['last_name', 'first_name']
+    fieldsets = (
+        ('Datos personales', {'fields': ('first_name', 'last_name', 'birth_date', 'bio')}),
+        ('Auditoría', {'fields': ('created_at', 'updated_at'), 'classes': ('collapse',)}),
+    )
 
+    def full_name(self, obj):
+        return f'{obj.first_name} {obj.last_name}'
+    full_name.short_description = 'Nombre'
+    full_name.admin_order_field = 'last_name'
 
-class RatingInline(admin.TabularInline):
-    model = Rating
-    extra = 1
-    readonly_fields = ['created_at', 'updated_at']
-    fields = ['user', 'score', 'comment', 'created_at', 'updated_at']
+    def age(self, obj):
+        if obj.birth_date:
+            from datetime import date
+            today = date.today()
+            return today.year - obj.birth_date.year - (
+                (today.month, today.day) < (obj.birth_date.month, obj.birth_date.day)
+            )
+        return '-'
+    age.short_description = 'Edad'
+
+    def directed_count(self, obj):
+        count = obj.directed_movies.count()
+        url = reverse('admin:movies_movie_changelist') + f'?director__id__exact={obj.id}'
+        return format_html('<a href="{}">{} dirigidas</a>', url, count)
+    directed_count.short_description = 'Dirigidas'
+
+    def acted_count(self, obj):
+        count = obj.acted_movies.count()
+        url = reverse('admin:movies_movie_changelist') + f'?cast__id__exact={obj.id}'
+        return format_html('<a href="{}">{} actuadas</a>', url, count)
+    acted_count.short_description = 'Actuadas'
 
 
 @admin.register(Movie)
