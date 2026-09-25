@@ -18,7 +18,7 @@
     <ul>
         {% for genre in genres %}
             <li>
-                <a href="{% url 'movie_recommendations' genre.id %}">{{ genre.name }} ({{ genre.movies_count }} películas)</a>
+                <a href="{% url 'movies:movie_recommendations' genre.id %}">{{ genre.name }} ({{ genre.movies_count }} películas)</a>
             </li>
         {% empty %}
             <li>No hay géneros con películas.</li>
