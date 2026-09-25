@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Géneros - Recomendaciones</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
+        h1 { color: #333; }
+        ul { list-style: none; padding: 0; }
+        li { margin: 0.5rem 0; }
+        a { text-decoration: none; color: #0066cc; padding: 0.5rem 1rem; border: 1px solid #ddd; border-radius: 4px; display: inline-block; }
+        a:hover { background-color: #f0f0f0; }
+    </style>
+</head>
+<body>
+    <h1>Géneros disponibles</h1>
+    <ul>
+        {% for genre in genres %}
+            <li>
+                <a href="{% url 'movie_recommendations' genre.id %}">{{ genre.name }} ({{ genre.movies_count }} películas)</a>
+            </li>
+        {% empty %}
+            <li>No hay géneros con películas.</li>
+        {% endfor %}
+    </ul>
+    <p><a href="{% url 'admin:index' %}">Ir al panel de administración</a></p>
+</body>
+</html>
