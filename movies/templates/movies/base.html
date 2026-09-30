@@ -1,0 +1,93 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}MovieStar · Cartelera{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'movies/css/cinestar.css' %}">
+</head>
+<body>
+    <div class="top-strip">
+        <div class="container top-strip-inner">
+            <span class="top-strip-item">VENTA CORPORATIVA</span>
+            <span class="top-strip-dot">•</span>
+            <span class="top-strip-item">CUMPLEAÑOS Y EVENTOS</span>
+            <span class="top-strip-right">
+                <a href="/admin/">ADMIN</a>
+            </span>
+        </div>
+    </div>
+
+    <header class="site-header">
+        <div class="container header-inner">
+            <a href="{% url 'movies:genre_list' %}" class="brand">
+                <span class="brand-star">★</span>
+                <span class="brand-text">MOVIE<span class="brand-accent">STAR</span></span>
+                <span class="brand-sub">CARTELERA</span>
+            </a>
+            <nav class="main-nav">
+                <a href="{% url 'movies:genre_list' %}" class="nav-link {% if request.resolver_match.url_name == 'genre_list' %}active{% endif %}">Cartelera</a>
+                <a href="{% url 'movies:genre_list' %}#generos" class="nav-link">Géneros</a>
+                <a href="{% url 'movies:genre_list' %}#ranking" class="nav-link">Top valoradas</a>
+                <a href="/admin/" class="nav-link nav-admin">Panel</a>
+            </nav>
+            <div class="header-actions">
+                <div class="search-box">
+                    <input id="movieSearch" type="search" placeholder="Buscar película, director..." autocomplete="off">
+                </div>
+                <a href="{% url 'movies:genre_list' %}#ranking" class="btn-buy">Ver ranking</a>
+            </div>
+        </div>
+        {% if all_genres %}
+        <div class="genre-bar">
+            <div class="container genre-bar-inner">
+                {% for g in all_genres %}
+                <a href="{% url 'movies:movie_recommendations' g.id %}"
+                   class="chip {% if genre and genre.id == g.id %}chip-active{% endif %}">
+                    {{ g.name }}
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </header>
+
+    <main>
+        {% block hero %}{% endblock %}
+        <div class="container">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container footer-grid">
+            <div>
+                <div class="brand brand-footer">
+                    <span class="brand-star">★</span>
+                    <span class="brand-text">MOVIE<span class="brand-accent">STAR</span></span>
+                </div>
+                <p class="muted">Diseño inspirado en la experiencia de cartelera de CineStar: fondo oscuro, acento rojo y foco total en la película.</p>
+            </div>
+            <div>
+                <h4>Cartelera</h4>
+                <ul>
+                    <li><a href="{% url 'movies:genre_list' %}">Estrenos</a></li>
+                    <li><a href="{% url 'movies:genre_list' %}#generos">Por género</a></li>
+                    <li><a href="{% url 'movies:genre_list' %}#ranking">Mejor valoradas</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4>Proyecto</h4>
+                <ul>
+                    <li><a href="/admin/">Administración Django</a></li>
+                    <li><span class="muted">Películas · Géneros · Valoraciones</span></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">Uso académico · Sin afiliación con CineStar</div>
+    </footer>
+
+    <script src="{% static 'movies/js/main.js' %}"></script>
+</body>
+</html>

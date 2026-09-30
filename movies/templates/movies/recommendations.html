@@ -1,44 +1,93 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Recomendaciones - {{ genre.name }}</title>
-    <style>
-        body { font-family: Arial, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
-        h1 { color: #333; }
-        .movie { border: 1px solid #ddd; border-radius: 8px; padding: 1rem; margin: 1rem 0; background: #fafafa; }
-        .movie h2 { margin: 0 0 0.5rem; color: #2c3e50; }
-        .meta { color: #666; font-size: 0.9rem; margin-bottom: 0.5rem; }
-        .rating { font-weight: bold; color: #e67e22; }
-        .synopsis { margin-top: 0.5rem; line-height: 1.5; }
-        a.back { display: inline-block; margin-bottom: 1rem; color: #0066cc; text-decoration: none; }
-        a.back:hover { text-decoration: underline; }
-    </style>
-</head>
-<body>
-    <a href="{% url 'movies:genre_list' %}" class="back">← Volver a géneros</a>
-    <h1>Películas mejor valoradas en: {{ genre.name }}</h1>
-    
-    {% for movie in movies %}
-        <div class="movie">
-            <h2>{{ movie.title }} ({{ movie.release_year }})</h2>
-            <div class="meta">
-                Duración: {{ movie.duration }} min
-                {% if movie.director %} | Director: {{ movie.director }}{% endif %}
-            </div>
-            <div class="rating">
-                Puntuación media: {{ movie.avg_score|floatformat:1 }}/10 
-                ({{ movie.ratings_count }} valoración{{ movie.ratings_count|pluralize }})
-            </div>
-            {% if movie.synopsis %}
-                <div class="synopsis">{{ movie.synopsis }}</div>
-            {% endif %}
+{% extends 'movies/base.html' %}
+
+{% block title %}Top en {{ genre.name }} · MovieStar{% endblock %}
+
+{% block content %}
+<div class="crumbs">
+    <a href="{% url 'movies:genre_list' %}">Cartelera</a>
+    <span>›</span>
+    <span>{{ genre.name }}</span>
+</div>
+
+<h1 class="page-title">Lo mejor en <em>{{ genre.name }}</em></h1>
+<p class="muted">Películas del mismo género ordenadas por valoración media. Esto es lo que el panel no hace solo: exige una vista propia con agregación.</p>
+
+{% if movies %}
+<div class="rank-list" style="margin: 18px 0 22px;">
+    {% for m in movies|slice:":3" %}
+    <div class="rank-row">
+        <div class="rank-pos p{{ forloop.counter }}">{{ forloop.counter }}</div>
+        <div>
+            <strong>{{ m.title }}</strong> <span class="muted">({{ m.release_year }})</span><br>
+            <span class="muted">{{ m.duration }} min{% if m.director %} · {{ m.director }}{% endif %} · {{ m.ratings_count }} voto{{ m.ratings_count|pluralize }}</span>
         </div>
-    {% empty %}
-        <p>No hay películas con valoraciones en este género.</p>
+        <div class="rank-score">{{ m.avg_score|floatformat:1 }} ★</div>
+    </div>
     {% endfor %}
-    
-    <p><a href="{% url 'admin:index' %}">Ir al panel de administración</a></p>
-</body>
-</html>
+</div>
+
+<div class="movie-grid">
+    {% for m in movies %}
+    <article class="movie-card" data-search="{{ m.title }} {{ m.original_title }} {% if m.director %}{{ m.director }}{% endif %}">
+        <div class="poster">
+            {% if m.poster %}
+            <img src="{{ m.poster.url }}" alt="{{ m.title }}" loading="lazy">
+            {% else %}
+            <div class="poster-fallback">{{ m.title|slice:":1" }}</div>
+            {% endif %}
+            <div class="poster-badges">
+                <span class="score-pill">★ {{ m.avg_score|floatformat:1 }}</span>
+                <span class="year-pill">{{ m.release_year }}</span>
+            </div>
+        </div>
+        <div class="movie-body">
+            <h3>{{ m.title }}</h3>
+            {% if m.original_title %}<div class="movie-original">{{ m.original_title }}</div>{% endif %}
+            <div class="movie-meta">
+                <span class="meta-pill">{{ m.duration }} min</span>
+                {% if m.director %}<span class="meta-pill">{{ m.director }}</span>{% endif %}
+                <span class="meta-pill">{{ m.ratings_count }} voto{{ m.ratings_count|pluralize }}</span>
+            </div>
+            {% if m.synopsis %}<p class="movie-syn">{{ m.synopsis }}</p>{% endif %}
+            <div class="movie-foot">
+                <span class="stars">★★★★★</span>
+                <span class="muted" style="font-size:12px">{{ genre.name }}</span>
+            </div>
+        </div>
+    </article>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty">No hay películas con valoraciones en este género.</div>
+{% endif %}
+
+<div class="section-head">
+    <div>
+        <h2>También te puede gustar</h2>
+        <p>Top de otros géneros para comparar.</p>
+    </div>
+</div>
+<div class="movie-grid">
+    {% for m in others %}
+    <article class="movie-card">
+        <div class="poster">
+            {% if m.poster %}
+            <img src="{{ m.poster.url }}" alt="{{ m.title }}" loading="lazy">
+            {% else %}
+            <div class="poster-fallback">{{ m.title|slice:":1" }}</div>
+            {% endif %}
+            <div class="poster-badges">
+                <span class="score-pill">★ {{ m.avg_score|floatformat:1 }}</span>
+                <span class="year-pill">{{ m.release_year }}</span>
+            </div>
+        </div>
+        <div class="movie-body">
+            <h3>{{ m.title }}</h3>
+            <div class="movie-meta">
+                {% for g in m.genres.all|slice:":2" %}<span class="meta-pill">{{ g.name }}</span>{% endfor %}
+            </div>
+        </div>
+    </article>
+    {% endfor %}
+</div>
+{% endblock %}

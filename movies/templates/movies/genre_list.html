@@ -1,29 +1,141 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Géneros - Recomendaciones</title>
-    <style>
-        body { font-family: Arial, sans-serif; max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
-        h1 { color: #333; }
-        ul { list-style: none; padding: 0; }
-        li { margin: 0.5rem 0; }
-        a { text-decoration: none; color: #0066cc; padding: 0.5rem 1rem; border: 1px solid #ddd; border-radius: 4px; display: inline-block; }
-        a:hover { background-color: #f0f0f0; }
-    </style>
-</head>
-<body>
-    <h1>Géneros disponibles</h1>
-    <ul>
-        {% for genre in genres %}
-            <li>
-                <a href="{% url 'movies:movie_recommendations' genre.id %}">{{ genre.name }} ({{ genre.movies_count }} películas)</a>
-            </li>
-        {% empty %}
-            <li>No hay géneros con películas.</li>
-        {% endfor %}
-    </ul>
-    <p><a href="{% url 'admin:index' %}">Ir al panel de administración</a></p>
-</body>
-</html>
+{% extends 'movies/base.html' %}
+
+{% block title %}MovieStar · Cartelera y géneros{% endblock %}
+
+{% block hero %}
+<section class="hero">
+    <div class="container hero-inner">
+        <div>
+            <span class="eyebrow">CARTELERA · EDICIÓN COLECCIONISTA</span>
+            <h1>El cine se vive <span>en pantalla grande</span></h1>
+            <p>Explora por género y descubre las películas mejor valoradas por la comunidad. Diseño inspirado en la cartelera de CineStar: directo, visual y sin fricción.</p>
+            <div class="hero-cta">
+                <a class="btn btn-primary" href="#generos">Explorar géneros</a>
+                <a class="btn btn-ghost" href="#ranking">Ver top valoradas</a>
+            </div>
+            <div class="hero-stats">
+                <div class="stat"><b>{{ total_movies }}</b><span>PELÍCULAS</span></div>
+                <div class="stat"><b>{{ genres|length }}</b><span>GÉNEROS</span></div>
+                <div class="stat"><b>{{ total_ratings }}</b><span>VALORACIONES</span></div>
+            </div>
+        </div>
+        <div class="hero-card">
+            <div class="hero-card-top">
+                <strong>Top 5 de la semana</strong>
+                <span class="badge-live">● EN CARTELERA</span>
+            </div>
+            <div class="hero-rank">
+                {% for m in top_movies|slice:":5" %}
+                <a class="hero-rank-row" href="{% url 'movies:movie_recommendations' m.genres.first.id %}">
+                    <span class="rank-num {% if forloop.counter == 1 %}top1{% endif %}">{{ forloop.counter }}</span>
+                    <span>
+                        <span class="rank-title">{{ m.title }}</span><br>
+                        <span class="rank-meta">{{ m.release_year }} · {{ m.ratings_count }} votos</span>
+                    </span>
+                    <span class="rank-score">{{ m.avg_score|floatformat:1 }} ★</span>
+                </a>
+                {% empty %}
+                <p class="muted">Aún no hay valoraciones.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block content %}
+<div class="section-head" id="generos">
+    <div>
+        <h2>Explora por género</h2>
+        <p>Elige un género para ver su ranking de mejor valoradas.</p>
+    </div>
+</div>
+
+<div class="genre-grid">
+    {% for genre in genres %}
+    <a class="genre-card" href="{% url 'movies:movie_recommendations' genre.id %}">
+        <h3>{{ genre.name }}</h3>
+        <span>{{ genre.movies_count }} película{{ genre.movies_count|pluralize }}</span>
+        <span class="go"><i>›</i> Ver ranking</span>
+    </a>
+    {% empty %}
+    <div class="empty">No hay géneros con películas.</div>
+    {% endfor %}
+</div>
+
+<div class="section-head" id="ranking">
+    <div>
+        <h2>Top valoradas</h2>
+        <p>Las favoritas de la comunidad en todos los géneros.</p>
+    </div>
+</div>
+
+<div class="movie-grid">
+    {% for m in top_movies %}
+    <article class="movie-card" data-search="{{ m.title }} {{ m.original_title }} {% if m.director %}{{ m.director }}{% endif %} {% for g in m.genres.all %}{{ g.name }} {% endfor %}">
+        <div class="poster">
+            {% if m.poster %}
+            <img src="{{ m.poster.url }}" alt="{{ m.title }}" loading="lazy">
+            {% else %}
+            <div class="poster-fallback">{{ m.title|slice:":1" }}</div>
+            {% endif %}
+            <div class="poster-badges">
+                <span class="score-pill">★ {{ m.avg_score|floatformat:1 }}</span>
+                <span class="year-pill">{{ m.release_year }}</span>
+            </div>
+        </div>
+        <div class="movie-body">
+            <h3>{{ m.title }}</h3>
+            {% if m.original_title %}<div class="movie-original">{{ m.original_title }}</div>{% endif %}
+            <div class="movie-meta">
+                <span class="meta-pill">{{ m.duration }} min</span>
+                {% if m.director %}<span class="meta-pill">{{ m.director }}</span>{% endif %}
+                <span class="meta-pill">{{ m.ratings_count }} voto{{ m.ratings_count|pluralize }}</span>
+            </div>
+            {% if m.synopsis %}<p class="movie-syn">{{ m.synopsis }}</p>{% endif %}
+            <div class="movie-foot">
+                <span class="stars">★★★★★</span>
+                {% if m.genres.first %}
+                <a class="btn-small" href="{% url 'movies:movie_recommendations' m.genres.first.id %}">Ver género</a>
+                {% endif %}
+            </div>
+        </div>
+    </article>
+    {% empty %}
+    <div class="empty">Todavía no hay películas con valoraciones.</div>
+    {% endfor %}
+</div>
+
+<div class="section-head">
+    <div>
+        <h2>Estrenos y cartelera</h2>
+        <p>Lo más reciente cargado desde el panel.</p>
+    </div>
+</div>
+
+<div class="movie-grid">
+    {% for m in billboard %}
+    <article class="movie-card" data-search="{{ m.title }} {{ m.original_title }} {% if m.director %}{{ m.director }}{% endif %}">
+        <div class="poster">
+            {% if m.poster %}
+            <img src="{{ m.poster.url }}" alt="{{ m.title }}" loading="lazy">
+            {% else %}
+            <div class="poster-fallback">{{ m.title|slice:":1" }}</div>
+            {% endif %}
+            <div class="poster-badges">
+                <span class="score-pill">{% if m.avg_score %}★ {{ m.avg_score|floatformat:1 }}{% else %}NUEVO{% endif %}</span>
+                <span class="year-pill">{{ m.release_year }}</span>
+            </div>
+        </div>
+        <div class="movie-body">
+            <h3>{{ m.title }}</h3>
+            <div class="movie-meta">
+                <span class="meta-pill">{{ m.duration }} min</span>
+                {% for g in m.genres.all|slice:":2" %}<span class="meta-pill">{{ g.name }}</span>{% endfor %}
+            </div>
+            {% if m.synopsis %}<p class="movie-syn">{{ m.synopsis }}</p>{% endif %}
+        </div>
+    </article>
+    {% endfor %}
+</div>
+{% endblock %}
