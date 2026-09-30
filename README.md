@@ -27,13 +27,15 @@ Proyecto Django que demuestra la configuración avanzada del panel de administra
 ### Control de Acceso (RBAC)
 Tres grupos con permisos granulares definidos en `Meta.permissions` de cada modelo:
 
-| Grupo | Permisos clave | Caso de uso |
-|-------|----------------|-------------|
-| **editores** | add/change/view Movie, Genre, Person, Rating; export, stats | Gestión de contenido sin borrado |
-| **moderadores** | Todo lo anterior + delete + moderate_rating + publish | Supervisión y moderación |
-| **vista** | Solo view_* en todos los modelos | Consulta de solo lectura |
+| Grupo | Permisos clave | Por qué |
+|-------|----------------|---------|
+| **editores** | add/change/view Movie, Genre, Person, Rating; export, stats. Sin delete | Carga diaria sin riesgo de borrar cartelera ni valoraciones |
+| **moderadores** | Todo lo anterior + delete + moderate_rating + publish | Supervisa, publica y modera; concentra el borrado fuera del flujo diario |
+| **vista** | Solo view_* en todos los modelos | Auditoría y consulta sin edición |
 
 Comando de configuración: `python manage.py setup_permissions`
+
+Verificación comprobada (ver `docs/ROLES_Y_VERIFICACION.md`): editor recibe 403 en `/admin/movies/movie/1/delete/`, visor recibe 403 en `/add/`, moderador conserva el flujo completo. El panel antes mostraba solo `__str__` sin filtros; después muestra columnas útiles, filtros por género/año y búsqueda por título/director, con valoraciones en línea dentro de la película.
 
 ### Vista Pública
 - `/` → Lista de géneros con conteo de películas

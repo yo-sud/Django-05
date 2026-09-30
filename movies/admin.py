@@ -15,6 +15,16 @@ class RatingInline(admin.TabularInline):
     verbose_name_plural = 'Valoraciones'
 
 
+class DirectedMovieInline(admin.TabularInline):
+    model = Movie
+    fk_name = 'director'
+    extra = 0
+    fields = ['title', 'release_year', 'duration']
+    show_change_link = True
+    verbose_name = 'Película dirigida'
+    verbose_name_plural = 'Películas dirigidas'
+
+
 @admin.register(Genre)
 class GenreAdmin(admin.ModelAdmin):
     list_display = ['name', 'movies_count', 'created_at', 'updated_at']
@@ -40,6 +50,7 @@ class PersonAdmin(admin.ModelAdmin):
     readonly_fields = ['created_at', 'updated_at']
     date_hierarchy = 'created_at'
     ordering = ['last_name', 'first_name']
+    inlines = [DirectedMovieInline]
     fieldsets = (
         ('Datos personales', {'fields': ('first_name', 'last_name', 'birth_date', 'bio')}),
         ('Auditoría', {'fields': ('created_at', 'updated_at'), 'classes': ('collapse',)}),
@@ -122,10 +133,12 @@ class MovieAdmin(admin.ModelAdmin):
     genres_list.short_description = 'Géneros'
 
     def avg_score(self, obj):
-        avg = obj.ratings.aggregate(avg=Avg('score'))['avg']
+        avg = getattr(obj, 'avg_score', None)
+        if avg is None:
+            avg = obj.ratings.aggregate(avg=Avg('score'))['avg']
         if avg:
             color = 'green' if avg >= 7 else 'orange' if avg >= 5 else 'red'
-            return format_html('<span style="color: {}; font-weight: bold;">{:.1f}</span>', color, avg)
+            return format_html('<span style="color: {}; font-weight: bold;">{}</span>', color, f'{float(avg):.1f}')
         return '-'
     avg_score.short_description = 'Media'
     avg_score.admin_order_field = 'avg_score'
